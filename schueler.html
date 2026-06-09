@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fusion – Schüleransicht</title>
+<link rel="stylesheet" href="kt.css">
+<style>
+body { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
+
+/* ── Ambient bg ─────────────────────────────────────────────────────── */
+.s-ambient {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.s-blob {
+  position: absolute; border-radius: 50%; filter: blur(90px); opacity: .12;
+  animation: sBlobDrift 20s ease-in-out infinite alternate;
+}
+.sb1 { width: 550px; height: 550px; background: radial-gradient(circle, #60a5fa, transparent 65%); top: -200px; right: -100px; }
+.sb2 { width: 400px; height: 400px; background: radial-gradient(circle, #a78bfa, transparent 65%); bottom: -100px; left: -80px; animation-delay: -8s; }
+@keyframes sBlobDrift {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(30px, 20px) scale(1.08); }
+}
+
+/* ── Screen system ── */
+.student-screen { display: none; animation: fadeIn .4s ease; min-height: 100vh; position: relative; z-index: 1; }
+.student-screen.active { display: flex; flex-direction: column; }
+
+/* ══════════════════════════════════════════════
+   SCREEN 1: JOIN — completely new design
+══════════════════════════════════════════════ */
+.join-outer {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 24px; min-height: 100vh;
+}
+
+.join-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  padding: 0;
+  width: 100%; max-width: 460px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03);
+  overflow: hidden;
+  animation: scaleIn .45s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* Card top strip with gradient */
+.join-header {
+  padding: 40px 40px 32px;
+  background: linear-gradient(160deg, rgba(96,165,250,.06) 0%, rgba(167,139,250,.04) 100%);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.join-logo-area {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-bottom: 20px;
+}
+.join-logo-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 24px rgba(96,165,250,.3);
+}
+.join-logo-text {
+  font-family: var(--font-display);
+  font-size: 1.6rem; font-weight: 900;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.join-headline {
+  font-family: var(--font-display);
+  font-size: 1.5rem; font-weight: 700;
+  color: var(--text); margin-bottom: 8px;
+}
+.join-sub {
+  color: var(--text-muted); font-size: 14px; line-height: 1.5;
+}
+
+/* Card body */
+.join-body { padding: 32px 40px 40px; }
+
+.field-row {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px;
+}
+.field-label {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.field-input-wrap {
+  position: relative;
+}
+.field-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; pointer-events: none; opacity: .6;
+}
+.field-input {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: var(--r-md);
+  padding: 12px 14px 12px 42px;
+  font-size: 15px;
+  outline: none;
+  width: 100%;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.field-input:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.15);
+  background: var(--surface3);
+}
+.field-input::placeholder { color: var(--text-dim); }
+
+/* Code input special */
+.code-field {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  text-align: center;
+  letter-spacing: .35em;
+  padding: 14px 14px;
+  border-color: var(--border2);
+}
+.code-field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(167,139,250,.15);
+}
+
+.join-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  padding: 15px;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: all .25s;
+  box-shadow: 0 8px 24px rgba(96,165,250,.25);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  letter-spacing: .01em;
+}
+.join-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(96,165,250,.4);
+  filter: brightness(1.08);
+}
+.join-btn:active { transform: translateY(0); }
+
+.join-footer-link {
+  text-align: center; margin-top: 20px;
+  font-size: 13px; color: var(--text-dim);
+}
+.join-footer-link a { color: var(--text-muted); transition: color .2s; }
+.join-footer-link a:hover { color: var(--accent); text-decoration: none; }
+
+/* ══════════════════════════════════════════════
+   SCREEN 2: WAIT
+══════════════════════════════════════════════ */
+.wait-screen {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; padding: 32px;
+}
+.wait-orb {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 28px;
+  animation: pulse 2.5s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(167,139,250,.3);
+}
+.wait-title { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 10px; }
+.wait-sub { color: var(--text-muted); margin-bottom: 28px; max-width: 360px; line-height: 1.6; }
+
+/* ══════════════════════════════════════════════
+   SCREEN 3: TEST
+══════════════════════════════════════════════ */
+.test-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(12,14,26,.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.test-title-sm { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+.student-timer { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 500; color: var(--text); transition: color .3s; }
+.student-timer.warn   { color: var(--yellow); }
+.student-timer.danger { color: var(--red); animation: blink 1s ease-in-out infinite; }
+.progress-indicator { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+.test-body { flex: 1; padding: 32px; max-width: 780px; margin: 0 auto; width: 100%; }
+
+/* Questions */
+.q-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 28px; margin-bottom: 20px;
+  animation: fadeIn .3s ease;
+}
+.q-num { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.q-text { font-size: 1.05rem; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+
+.mc-options { display: flex; flex-direction: column; gap: 10px; }
+.mc-btn {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-radius: var(--r-lg);
+  border: 1.5px solid var(--border);
+  background: var(--surface2); cursor: pointer;
+  transition: all .2s; font-size: 14px; color: var(--text);
+  text-align: left;
+}
+.mc-btn:hover { border-color: var(--accent2); background: rgba(96,165,250,.07); }
+.mc-btn.selected { border-color: var(--accent2); background: rgba(96,165,250,.12); color: var(--accent2); }
+
+.mc-radio {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.mc-btn.selected .mc-radio { border-color: var(--accent2); background: var(--accent2); }
+.mc-radio-inner { width: 8px; height: 8px; border-radius: 50%; background: var(--bg); opacity: 0; transition: opacity .2s; }
+.mc-btn.selected .mc-radio-inner { opacity: 1; }
+
+.multi-check {
+  width: 20px; height: 20px; border-radius: 5px;
+  border: 2px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: all .2s;
+}
+.mc-btn.selected .multi-check { border-color: var(--accent); background: var(--accent); color: var(--bg); }
+
+.free-ta {
+  width: 100%; min-height: 120px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--text); border-radius: var(--r-lg); padding: 14px;
+  font-size: 14px; outline: none; resize: vertical;
+  font-family: var(--font-sans); line-height: 1.7;
+  transition: border-color .2s, box-shadow .2s;
+}
+.free-ta:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.free-ta.lined { background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 27px, rgba(167,139,250,.12) 28px); }
+.free-ta.grid  { background-image: repeating-linear-gradient(to right, transparent 0px, transparent 15px, rgba(167,139,250,.06) 16px), repeating-linear-gradient(to bottom, transparent 0px, transparent 15px, rgba(167,139,250,.06) 16px); }
+
+.test-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 32px; gap: 12px; flex-wrap: wrap; }
+
+/* Result */
+.result-wrap {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 32px; text-align: center;
+}
+.result-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 40px; max-width: 560px; width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient bg -->
+<div class="s-ambient">
+  <div class="s-blob sb1"></div>
+  <div class="s-blob sb2"></div>
+</div>
+
+<!-- ══ SCREEN 1: JOIN (new design) ══ -->
+<div class="student-screen active" id="scr-join">
+  <div class="join-outer">
+    <div class="join-card">
+
+      <div class="join-header">
+        <div class="join-logo-area">
+          <div class="join-logo-icon" style="background:linear-gradient(135deg,#3b82f6,#6366f1,#8b5cf6)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="1" y="1" width="14" height="18" rx="3" fill="white" opacity="0.9"/>
+              <circle cx="5.5" cy="8" r="2" fill="#3b82f6"/>
+              <path d="M4.5 8l1 1 1.8-1.8" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="8.5" y="7.2" width="5" height="1.5" rx=".75" fill="#c7d2fe"/>
+              <circle cx="5.5" cy="13" r="2" fill="#6366f1"/>
+              <path d="M4.5 13l1 1 1.8-1.8" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="8.5" y="12.2" width="3.5" height="1.5" rx=".75" fill="#c7d2fe"/>
+              <path d="M13 14.5L16.5 20L23 10" stroke="url(#sg1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs><linearGradient id="sg1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+            </svg>
+          </div>
+          <span class="join-logo-text" style="background:linear-gradient(135deg,#3b82f6,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Fusion</span>
+        </div>
+        <div class="join-headline">Jetzt einloggen</div>
+        <div class="join-sub">Gib deinen Namen und den Testcode deines Lehrers ein</div>
+      </div>
+
+      <div class="join-body">
+        <div class="field-row">
+          <label class="field-label">Dein Name</label>
+          <div class="field-input-wrap">
+            <span class="field-icon">👤</span>
+            <input class="field-input" id="student-name" type="text"
+              placeholder="Vorname Nachname"
+              autocomplete="name"
+              style="padding-left:42px">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Testcode</label>
+          <div class="field-input-wrap">
+            <input class="field-input code-field" id="test-code"
+              placeholder="_ _ _ _ _ _"
+              maxlength="6" inputmode="numeric"
+              style="padding-left:14px">
+          </div>
+        </div>
+
+        <button class="join-btn" onclick="joinTest()">
+          <span>Beitreten</span>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 9h12M10 4l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div class="join-footer-link">
+          <a href="index.html">← Zurück zur Startseite</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: WARTEN ══ -->
+<div class="student-screen" id="scr-wait">
+  <div class="wait-screen">
+    <div class="wait-orb">⏳</div>
+    <div class="wait-title" id="wait-title">Warte auf den Lehrer…</div>
+    <div class="wait-sub" id="wait-sub">Der Test wurde noch nicht gestartet. Bitte warte kurz.</div>
+    <div class="badge badge-blue" id="wait-code-badge" style="font-size:1.1rem;padding:8px 20px;margin-top:8px">Code: ––––––</div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: TEST ══ -->
+<div class="student-screen" id="scr-test">
+  <header class="test-header">
+    <div>
+      <div class="test-title-sm" id="test-title-sm">–</div>
+      <div class="progress-indicator" id="progress-indicator">–</div>
+    </div>
+    <div class="student-timer" id="student-timer">45:00</div>
+  </header>
+  <div class="test-body" id="test-body"></div>
+</div>
+
+<!-- ══ SCREEN 4: ABGEGEBEN ══ -->
+<div class="student-screen" id="scr-submitted">
+  <div class="wait-screen">
+    <div style="font-size:4rem;margin-bottom:16px;animation:bounce 2s ease infinite">📬</div>
+    <div class="wait-title">Abgabe erfolgreich!</div>
+    <div class="wait-sub" id="submitted-msg">Deine Antworten wurden eingereicht. Warte auf die Korrektur des Lehrers.</div>
+    <button class="btn btn-primary mt-16" onclick="checkResult()">🔍 Ergebnis prüfen</button>
+    <div style="margin-top:12px;font-size:13px;color:var(--text-dim)">Seite kann sicher geschlossen werden</div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 5: ERGEBNIS ══ -->
+<div class="student-screen" id="scr-result">
+  <div class="result-wrap">
+    <div class="result-card">
+      <div id="result-inner"></div>
+      <div class="flex gap-10 justify-center flex-wrap mt-24">
+        <button class="btn btn-secondary" onclick="downloadResult('txt')">📄 TXT</button>
+        <button class="btn btn-secondary" onclick="downloadResult('json')">📋 JSON</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ PDF drucken</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="kt.js"></script>
+<script>
+let studentName = '';
+let studentCode = '';
+let currentTest = null;
+let answers = {};
+let currentQIdx = 0;
+let allQuestions = [];
+let studentTimerSec = 0;
+let studentTimerInterval = null;
+let pollInterval = null;
+let submissionId = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.student-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('scr-' + id).classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code');
+  if (code) document.getElementById('test-code').value = code;
+
+  const saved = sessionStorage.getItem('fusion_student_state');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      studentName = s.studentName || '';
+      studentCode = s.studentCode || '';
+      answers = s.answers || {};
+      submissionId = s.submissionId || null;
+      if (s.screen === 'submitted') { showScreen('submitted'); startPollForResult(); return; }
+      if (s.screen === 'result')    { showScreen('result'); loadAndShowResult(); return; }
+    } catch {}
+  }
+
+  KT.showTutorial([
+    { emoji:'👤', title:'Dein Name', desc:'Gib deinen vollständigen Namen ein, damit dein Lehrer dich zuordnen kann.', target:'#student-name' },
+    { emoji:'🔢', title:'Testcode', desc:'Der 6-stellige Code öffnet den richtigen Test.', target:'#test-code' },
+  ], 'student-join');
+
+  // Auto-format code input
+  document.getElementById('test-code').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+  });
+  document.getElementById('test-code').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') joinTest();
+  });
+  document.getElementById('student-name').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('test-code').focus();
+  });
+});
+
+function joinTest() {
+  const name = document.getElementById('student-name').value.trim();
+  const code = document.getElementById('test-code').value.trim();
+  if (!name) { KT.toast('Bitte gib deinen Namen ein', 'warn'); return; }
+  if (code.length !== 6) { KT.toast('Der Code muss 6-stellig sein', 'warn'); return; }
+  const data = KT.load();
+  const test = data.tests.find(t => t.code === code);
+  if (!test) { KT.toast('Test nicht gefunden. Prüfe den Code.', 'error'); return; }
+  studentName = name; studentCode = code;
+  const alreadyJoined = data.students.find(s => s.name === name && s.testId === test.id);
+  if (!alreadyJoined) { data.students.push({ id: KT.uid(), name, testId: test.id, joinedAt: Date.now() }); KT.save(data); }
+  const existingSub = data.submissions.find(s => s.testId === test.id && s.studentName === name);
+  if (existingSub) {
+    submissionId = existingSub.id;
+    if (existingSub.corrected) { showScreen('result'); loadAndShowResult(); return; }
+    saveState('submitted'); showScreen('submitted'); startPollForResult(); return;
+  }
+  if (test.status === 'live') { currentTest = test; initTest(test); }
+  else if (test.status === 'draft') {
+    document.getElementById('wait-title').textContent = 'Test noch nicht gestartet';
+    document.getElementById('wait-sub').textContent = 'Der Lehrer hat den Test noch nicht gestartet. Bitte warte.';
+    document.getElementById('wait-code-badge').textContent = `Code: ${code}`;
+    showScreen('wait'); startPollForTestStart(test.id);
+  } else if (test.status === 'ended') { KT.toast('Dieser Test wurde bereits beendet', 'warn'); }
+}
+
+function startPollForTestStart(testId) {
+  clearInterval(pollInterval);
+  pollInterval = setInterval(() => {
+    const data = KT.load();
+    const t = data.tests.find(x => x.id === testId);
+    if (t && t.status === 'live') { clearInterval(pollInterval); currentTest = t; initTest(t); }
+  }, 2000);
+}
+
+function initTest(test) {
+  currentTest = test; answers = {};
+  allQuestions = [];
+  test.pages?.forEach(page => {
+    page.elements?.forEach(el => {
+      if (['mc','multi','free'].includes(el.type)) allQuestions.push({ ...el, pageId: page.id });
+    });
+  });
+  if (allQuestions.length === 0) { KT.toast('Dieser Test hat keine Fragen', 'warn'); return; }
+  currentQIdx = 0;
+  document.getElementById('test-title-sm').textContent = test.title || 'Test';
+  const startedAt = test.startedAt || Date.now();
+  const totalSec = (test.duration || 45) * 60;
+  studentTimerSec = Math.max(0, totalSec - Math.floor((Date.now() - startedAt) / 1000));
+  showScreen('test'); renderQuestion(); startStudentTimer(); saveState('test');
+}
+
+function startStudentTimer() {
+  clearInterval(studentTimerInterval); updateStudentTimerDisplay();
+  studentTimerInterval = setInterval(() => {
+    studentTimerSec--;
+    if (studentTimerSec <= 0) { studentTimerSec = 0; clearInterval(studentTimerInterval); autoSubmit(); }
+    updateStudentTimerDisplay();
+  }, 1000);
+}
+
+function updateStudentTimerDisplay() {
+  const el = document.getElementById('student-timer');
+  el.textContent = KT.fmtTime(studentTimerSec);
+  el.className = 'student-timer';
+  if (studentTimerSec < 300) el.classList.add('warn');
+  if (studentTimerSec < 60)  el.classList.add('danger');
+}
+
+function renderQuestion() {
+  const body = document.getElementById('test-body');
+  const q = allQuestions[currentQIdx];
+  if (!q) return;
+  const totalAnswered = allQuestions.filter(x => {
+    const a = answers[x.id];
+    return a !== undefined && a !== '' && !(Array.isArray(a) && a.length === 0);
+  }).length;
+  document.getElementById('progress-indicator').textContent = `${totalAnswered} / ${allQuestions.length} beantwortet`;
+
+  let qHtml = `<div class="q-card">
+    <div class="q-num">Frage ${currentQIdx + 1} von ${allQuestions.length}</div>
+    <div class="q-text">${q.question || 'Frage'}</div>`;
+
+  if (q.type === 'mc') {
+    qHtml += `<div class="mc-options">`;
+    q.options.forEach((opt, i) => {
+      const sel = answers[q.id] === i;
+      qHtml += `<button class="mc-btn ${sel ? 'selected' : ''}" onclick="selectMc('${q.id}', ${i})">
+        <div class="mc-radio"><div class="mc-radio-inner"></div></div><span>${opt}</span></button>`;
+    });
+    qHtml += `</div>`;
+  } else if (q.type === 'multi') {
+    qHtml += `<div class="mc-options">`;
+    q.options.forEach((opt, i) => {
+      const sel = (answers[q.id] || []).includes(i);
+      qHtml += `<button class="mc-btn ${sel ? 'selected' : ''}" onclick="selectMulti('${q.id}', ${i})">
+        <div class="multi-check">${sel ? '✓' : ''}</div><span>${opt}</span></button>`;
+    });
+    qHtml += `</div>`;
+  } else if (q.type === 'free') {
+    const bg = currentTest?.background;
+    const bgClass = bg === 'lined' ? 'lined' : bg === 'grid' ? 'grid' : '';
+    qHtml += `<textarea class="free-ta ${bgClass}" rows="${q.rows || 4}" placeholder="Deine Antwort hier…" oninput="answers['${q.id}']=this.value">${answers[q.id] || ''}</textarea>`;
+  }
+  qHtml += `</div>`;
+
+  qHtml += `<div class="test-nav">
+    <button class="btn btn-secondary" onclick="prevQ()" ${currentQIdx === 0 ? 'disabled' : ''}>← Zurück</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+      ${allQuestions.map((x, i) => {
+        const isAns = answers[x.id] !== undefined && answers[x.id] !== '' && !(Array.isArray(answers[x.id]) && answers[x.id].length === 0);
+        return `<button onclick="jumpTo(${i})" style="width:32px;height:32px;border-radius:50%;border:2px solid ${i===currentQIdx?'var(--accent)':isAns?'var(--green)':'var(--border)'};background:${i===currentQIdx?'var(--accent-glow)':isAns?'rgba(74,222,128,.1)':'var(--surface2)'};color:${i===currentQIdx?'var(--accent)':isAns?'var(--green)':'var(--text-muted)'};cursor:pointer;font-size:12px">${i+1}</button>`;
+      }).join('')}
+    </div>
+    ${currentQIdx < allQuestions.length - 1
+      ? `<button class="btn btn-primary" onclick="nextQ()">Weiter →</button>`
+      : `<button class="btn btn-primary" style="background:var(--green);color:var(--bg)" onclick="confirmSubmit()">✓ Abgeben</button>`}
+  </div>`;
+
+  body.innerHTML = qHtml;
+}
+
+function selectMc(qId, i)    { answers[qId] = i; renderQuestion(); }
+function selectMulti(qId, i) {
+  if (!answers[qId]) answers[qId] = [];
+  const idx = answers[qId].indexOf(i);
+  if (idx >= 0) answers[qId].splice(idx,1); else answers[qId].push(i);
+  renderQuestion();
+}
+function nextQ()  { if (currentQIdx < allQuestions.length-1) { currentQIdx++; renderQuestion(); } }
+function prevQ()  { if (currentQIdx > 0) { currentQIdx--; renderQuestion(); } }
+function jumpTo(i){ currentQIdx = i; renderQuestion(); }
+
+function confirmSubmit() {
+  const unanswered = allQuestions.filter(q => {
+    const a = answers[q.id];
+    return a === undefined || a === '' || (Array.isArray(a) && a.length === 0);
+  }).length;
+  const msg = unanswered > 0
+    ? `Du hast noch ${unanswered} Frage(n) nicht beantwortet. Trotzdem abgeben?`
+    : 'Möchtest du deinen Test abgeben?';
+  if (confirm(msg)) submitTest();
+}
+
+function autoSubmit() { KT.toast('Zeit abgelaufen – Test wird automatisch abgegeben','warn'); submitTest(); }
+
+function submitTest() {
+  clearInterval(studentTimerInterval);
+  const data = KT.load();
+  const score = KT.calcScore(currentTest, answers);
+  const sub = { id: KT.uid(), testId: currentTest.id, studentName, submittedAt: Date.now(), answers: {...answers}, score, corrected: false, manualPoints: {} };
+  data.submissions.push(sub); KT.save(data); submissionId = sub.id;
+  saveState('submitted'); showScreen('submitted'); startPollForResult();
+}
+
+function startPollForResult() { clearInterval(pollInterval); pollInterval = setInterval(checkResult, 3000); }
+
+function checkResult() {
+  const data = KT.load();
+  const sub = submissionId
+    ? data.submissions.find(s => s.id === submissionId)
+    : data.submissions.find(s => s.studentName === studentName && s.testId === currentTest?.id);
+  if (sub && sub.corrected) {
+    clearInterval(pollInterval); submissionId = sub.id;
+    saveState('result'); showScreen('result'); loadAndShowResult();
+  }
+}
+
+function loadAndShowResult() {
+  const data = KT.load();
+  const sub = data.submissions.find(s => s.id === submissionId);
+  if (!sub) { KT.toast('Korrektur noch nicht verfügbar','info'); return; }
+  const test = data.tests.find(t => t.id === sub.testId);
+  const gradeColor = KT.gradeColor(sub.grade);
+  document.getElementById('result-inner').innerHTML = `
+    <div style="margin-bottom:24px">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Test</div>
+      <div style="font-size:1.2rem;font-weight:700">${test?.title||'–'}</div>
+    </div>
+    <div class="flex items-center justify-center gap-24 mb-24" style="flex-wrap:wrap">
+      <div class="score-ring" style="border-color:${gradeColor}">
+        <div class="grade-num" style="color:${gradeColor}">${sub.grade||'–'}</div>
+        <div class="grade-label">Note</div>
+      </div>
+      <div style="text-align:left">
+        <div style="font-size:13px;color:var(--text-muted)">Score</div>
+        <div style="font-size:2rem;font-weight:700">${sub.score?.earned||0}/${sub.score?.total||0} P</div>
+        <div style="font-size:13px;color:var(--text-muted)">${sub.score?.pct||0}%</div>
+        <div style="margin-top:8px"><div class="progress-wrap" style="width:160px"><div class="progress-bar" style="width:${sub.score?.pct||0}%"></div></div></div>
+      </div>
+    </div>
+    ${sub.feedback ? `<div style="background:var(--surface2);border-left:3px solid var(--accent);padding:16px;border-radius:0 var(--r-md) var(--r-md) 0;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Feedback</div>
+      <div style="font-size:14px;line-height:1.6">${sub.feedback}</div>
+    </div>` : ''}
+    ${sub.signature ? `<div style="margin-top:12px">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Unterschrift</div>
+      <img src="${sub.signature}" style="max-width:100%;border-radius:8px;background:var(--surface3);padding:8px">
+    </div>` : ''}
+    <div style="margin-top:16px;font-size:13px;color:var(--text-dim)">
+      Korrigiert am ${sub.sentAt ? new Date(sub.sentAt).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'}) : '–'}
+    </div>`;
+}
+
+function downloadResult(fmt) {
+  const data = KT.load();
+  const sub = data.submissions.find(s => s.id === submissionId);
+  if (!sub) return;
+  const test = data.tests.find(t => t.id === sub.testId);
+  if (fmt === 'json') {
+    KT.download(`ergebnis_${studentName}.json`, JSON.stringify({test:test?.title, student:studentName, grade:sub.grade, score:sub.score, feedback:sub.feedback, correctedAt:sub.sentAt},null,2),'application/json');
+  } else {
+    KT.download(`ergebnis_${studentName}.txt`,
+      `FUSION – Testergebnis\nTest: ${test?.title||'–'}\nSchüler: ${studentName}\nNote: ${sub.grade||'–'}\nScore: ${sub.score?.earned||0}/${sub.score?.total||0} Punkte (${sub.score?.pct||0}%)\nDatum: ${sub.sentAt?new Date(sub.sentAt).toLocaleString('de-DE'):'–'}\n\nFeedback:\n${sub.feedback||'(kein Feedback)'}`);
+  }
+}
+
+function saveState(screen) {
+  sessionStorage.setItem('fusion_student_state', JSON.stringify({screen, studentName, studentCode, answers, submissionId}));
+}
+</script>
+</body>
+</html>
