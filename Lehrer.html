@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fusion – Lehreransicht</title>
+<link rel="stylesheet" href="kt.css">
+<style>
+.section{display:none;animation:fadeIn .38s ease;}
+.section.active{display:block;}
+
+.sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--col-border);flex-shrink:0;display:flex;align-items:center;gap:10px;}
+.logo-mark-sm{width:30px;height:30px;flex-shrink:0;}
+.logo-name{font-family:var(--font-display);font-size:1.25rem;font-weight:900;background:linear-gradient(135deg,#3b82f6,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+.page-title{font-family:var(--font-display);font-size:1.85rem;font-weight:900;margin-bottom:6px;}
+.page-sub{color:var(--col-muted);margin-bottom:28px;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:30px;}
+.stat-card{background:var(--col-surface);border:1px solid var(--col-border);border-radius:var(--r-lg);padding:22px 22px 18px;position:relative;overflow:hidden;animation:cardIn .4s ease both;transition:border-color .2s,transform .2s;}
+.stat-card:hover{border-color:var(--col-border2);transform:translateY(-2px);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--col-accent),var(--col-accent2));}
+.stat-icon{font-size:1.7rem;margin-bottom:10px;}
+.stat-val{font-family:var(--font-display);font-size:2.4rem;font-weight:900;line-height:1;}
+.stat-label{font-size:13px;color:var(--col-muted);font-weight:500;margin-top:5px;}
+.stat-sub{font-size:12px;color:var(--col-dim);margin-top:2px;}
+
+.builder-wrap{display:flex;gap:22px;align-items:flex-start;}
+.builder-tools{width:208px;flex-shrink:0;background:var(--col-surface);border:1px solid var(--col-border);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:5px;position:sticky;top:24px;}
+.tool-btn{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--r-sm);background:var(--col-surface2);border:1px solid var(--col-border);color:var(--col-text);font-size:13px;cursor:pointer;transition:all .16s;text-align:left;width:100%;font-family:var(--font-sans);}
+.tool-btn:hover{background:var(--col-surface3);border-color:var(--col-accent);color:var(--col-accent);}
+.tool-btn .ti{font-size:1rem;width:20px;text-align:center;color:var(--col-accent);}
+
+.pages-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.page-tab{padding:5px 14px;border-radius:20px;font-size:13px;background:var(--col-surface2);border:1px solid var(--col-border);cursor:pointer;color:var(--col-muted);transition:all .18s;font-family:var(--font-sans);}
+.page-tab.active{background:rgba(124,106,245,.14);color:var(--col-accent);border-color:rgba(124,106,245,.3);}
+
+.live-code-display{font-family:var(--font-mono);font-size:3rem;font-weight:500;letter-spacing:.38em;color:var(--col-accent);background:rgba(124,106,245,.08);display:inline-block;padding:16px 32px;border-radius:16px;cursor:pointer;transition:all .2s;user-select:all;}
+.live-code-display:hover{background:rgba(124,106,245,.15);transform:scale(1.03);}
+
+.timer-disp{font-family:var(--font-mono);font-size:3.2rem;font-weight:500;color:var(--col-text);transition:color .35s;letter-spacing:.04em;}
+.timer-disp.warn{color:var(--col-yellow);}
+.timer-disp.danger{color:var(--col-red);animation:blink 1s ease-in-out infinite;}
+
+.q-block{background:var(--col-surface);border:1px solid var(--col-border);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;}
+.corr-opt{padding:6px 12px;border-radius:var(--r-sm);border:1px solid var(--col-border);display:inline-flex;gap:8px;align-items:center;margin:3px;font-size:13px;}
+.corr-opt.cor{background:rgba(61,214,140,.1);border-color:rgba(61,214,140,.3);color:var(--col-green);}
+.corr-opt.wrong{background:rgba(245,101,101,.1);border-color:rgba(245,101,101,.3);color:var(--col-red);}
+.corr-opt.neu{background:var(--col-surface2);color:var(--col-muted);}
+
+.grade-btn{width:42px;height:38px;border-radius:9px;border:1.5px solid var(--col-border);background:var(--col-surface2);color:var(--col-muted);font-weight:700;font-size:12px;cursor:pointer;transition:all .17s;font-family:var(--font-sans);}
+.grade-btn:hover{border-color:currentColor;opacity:.85;}
+.grade-btn.sel{opacity:1;}
+
+.profile-card{background:var(--col-surface);border:1px solid var(--col-border);border-radius:var(--r-xl);padding:32px;max-width:500px;}
+
+.adm-badge{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1000;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.05em;}
+
+.table-wrap{background:var(--col-surface);border:1px solid var(--col-border);border-radius:var(--r-lg);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--col-surface2);padding:11px 16px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--col-muted);text-align:left;border-bottom:1px solid var(--col-border);}
+tbody tr{border-bottom:1px solid var(--col-border);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--col-surface2);}
+tbody td{padding:13px 16px;font-size:14px;vertical-align:middle;}
+
+.sig-canvas{background:var(--col-surface3);border-radius:var(--r-md);border:1.5px solid var(--col-border);cursor:crosshair;display:block;width:100%;touch-action:none;}
+
+.dialog-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeInF .2s ease;}
+.dialog-bg.hidden{display:none;}
+.dialog{background:var(--col-surface);border:1px solid var(--col-border2);border-radius:var(--r-xl);padding:32px;max-width:480px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.7);animation:scaleIn .3s var(--anim-spring);}
+.dlg-title{font-family:var(--font-display);font-size:1.25rem;font-weight:700;margin-bottom:20px;}
+
+.color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
+.color-dot.active{border-color:var(--col-text);}
+
+.sbar-user{padding:12px 16px;border-top:1px solid var(--col-border);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .18s;}
+.sbar-user:hover{background:var(--col-surface2);}
+</style>
+</head>
+<body>
+<button id="mob-menu" style="display:none;position:fixed;top:12px;left:12px;z-index:200;background:var(--col-surface);border:1px solid var(--col-border);border-radius:10px;padding:8px 11px;color:var(--col-text);cursor:pointer;font-size:18px;box-shadow:0 4px 24px rgba(0,0,0,.5);" onclick="toggleSidebar()">☰</button>
+
+<div id="sb-overlay" style="display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.62);backdrop-filter:blur(5px);" onclick="closeSidebar()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <svg class="logo-mark-sm" viewBox="0 0 36 36" fill="none">
+      <defs><linearGradient id="slg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b82f6"/><stop offset="55%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+      <rect x="1" y="1" width="34" height="34" rx="9" fill="url(#slg)"/>
+      <rect x="5" y="4" width="18" height="23" rx="4" fill="white" opacity=".95"/>
+      <circle cx="10" cy="12" r="2.5" fill="#3b82f6"/>
+      <path d="M9 12l1.5 1.5 2.5-2.5" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="13.5" y="11" width="7" height="1.8" rx=".9" fill="#c7d2fe"/>
+      <circle cx="10" cy="18.5" r="2.5" fill="#6366f1"/>
+      <path d="M9 18.5l1.5 1.5 2.5-2.5" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="13.5" y="17.5" width="5" height="1.8" rx=".9" fill="#c7d2fe"/>
+      <path d="M17 23L21.5 32L34 14" stroke="url(#slg)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-name">Fusion</span>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:12px 8px;" id="sidenav">
+    <button class="nav-item active" data-sec="dashboard"><span class="nav-icon">🏠</span>Dashboard</button>
+    <button class="nav-item" data-sec="create"><span class="nav-icon">✏️</span>Test erstellen</button>
+    <button class="nav-item" data-sec="submissions"><span class="nav-icon">📬</span>Abgaben</button>
+    <button class="nav-item" data-sec="correct"><span class="nav-icon">✅</span>Korrigieren</button>
+    <button class="nav-item" data-sec="stats"><span class="nav-icon">📊</span>Statistiken</button>
+    <div style="height:1px;background:var(--col-border);margin:8px 12px;"></div>
+    <button class="nav-item" data-sec="profile"><span class="nav-icon">👤</span>Profil</button>
+    <button class="nav-item" id="nav-live" style="display:none;border-color:rgba(61,214,140,.2);color:var(--col-green);" data-sec="live"><span class="nav-icon" style="animation:blink 1.5s ease-in-out infinite">🟢</span>Live</button>
+    <button class="nav-item" id="nav-admin" style="display:none" data-sec="admin"><span class="nav-icon">🛡️</span>Admin <span class="adm-badge" style="margin-left:4px">ADMIN</span></button>
+  </div>
+
+  <div class="sbar-user" id="sbar-user">
+    <div class="avatar" id="sbar-av">?</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="sbar-name">Lehrer</div>
+      <div style="font-size:11px;color:var(--col-dim);">Lehreransicht</div>
+    </div>
+    <a href="index.html" style="background:none;border:none;color:var(--col-muted);cursor:pointer;font-size:16px;padding:6px;border-radius:6px;text-decoration:none;" title="Abmelden">🚪</a>
+  </div>
+</nav>
+
+<main class="main-content" id="main">
+
+<!-- ═══ DASHBOARD ═══ -->
+<section class="section active" id="sec-dashboard">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;flex-wrap:wrap;gap:14px;">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div style="color:var(--col-muted);">Willkommen zurück!</div>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="showSection('create')">✏️ Neuen Test erstellen</button>
+  </div>
+  <div class="stat-grid" id="stat-grid"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-family:var(--font-display);font-size:1.15rem;font-weight:700;">Meine Tests</div>
+    <span style="font-size:13px;color:var(--col-muted);" id="tests-count"></span>
+  </div>
+  <div id="tests-list"></div>
+</section>
+
+<!-- ═══ CREATE ═══ -->
+<section class="section" id="sec-create">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-ghost btn-sm" onclick="showSection('dashboard')">← Zurück</button>
+      <input id="b-title" class="f-input" value="Neuer Test" style="font-family:var(--font-display);font-size:1.08rem;font-weight:700;background:none;border:none;border-bottom:2px solid var(--col-border);border-radius:0;padding:4px 0;width:280px;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="togglePreview()">👁 Vorschau</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveTemplate()">📋 Vorlage</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveDraft()">💾 Entwurf</button>
+      <button class="btn btn-primary btn-sm" onclick="openStartDlg()">🚀 Starten</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;">
+    <div style="flex:2;min-width:150px;"><label class="f-label">Fach</label><input class="f-input" id="b-subject" placeholder="Mathematik"></div>
+    <div style="flex:1;min-width:100px;"><label class="f-label">Klasse</label><input class="f-input" id="b-grade" placeholder="8a"></div>
+    <div style="flex:1;min-width:100px;"><label class="f-label">Dauer (Min.)</label><input class="f-input" type="number" id="b-duration" value="45"></div>
+    <div style="flex:1;min-width:130px;"><label class="f-label">Hintergrund</label>
+      <select class="f-select" id="b-bg" onchange="updateBg()">
+        <option value="">Leer</option>
+        <option value="lined" selected>Liniert</option>
+        <option value="grid">Kariert</option>
+        <option value="dots">Gepunktet</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="builder-wrap">
+    <div class="builder-tools" id="tool-panel">
+      <div style="font-size:11px;font-weight:600;color:var(--col-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Elemente</div>
+      <button class="tool-btn" onclick="addEl('heading')"><span>H1</span> Überschrift</button>
+      <button class="tool-btn" onclick="addEl('text')"><span>¶</span> Textblock</button>
+      <button class="tool-btn" onclick="addEl('mc')"><span>◎</span> Einfachauswahl</button>
+      <button class="tool-btn" onclick="addEl('multi')"><span>☑</span> Mehrfachauswahl</button>
+      <button class="tool-btn" onclick="addEl('free')"><span>✎</span> Freitext</button>
+      <button class="tool-btn" onclick="addEl('fillblank')"><span>___</span> Lückentext</button>
+      <button class="tool-btn" onclick="addEl('sep')"><span>—</span> Trennlinie</button>
+      <button class="tool-btn" onclick="addEl('table')"><span>⊞</span> Tabelle</button>
+      <div style="height:1px;background:var(--col-border);margin:8px 0;"></div>
+      <div style="font-size:11px;font-weight:600;color:var(--col-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Entwürfe</div>
+      <div id="drafts-list" style="font-size:13px;color:var(--col-muted);">–</div>
+    </div>
+
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div class="pages-bar" id="pages-bar"></div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <button class="btn btn-ghost btn-sm" onclick="setZoom(zoom-10)">−</button>
+          <span style="font-size:12px;color:var(--col-muted);font-family:var(--font-mono);min-width:38px;text-align:center;" id="zoom-lbl">100%</span>
+          <button class="btn btn-ghost btn-sm" onclick="setZoom(zoom+10)">+</button>
+        </div>
+      </div>
+      <div class="builder-scroll">
+        <div id="a4-wrap" style="transform-origin:top center;transition:transform .2s;">
+          <div class="a4-page a4-lined" id="a4-page"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE ═══ -->
+<section class="section" id="sec-live">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+    <button class="btn btn-ghost btn-sm" onclick="showSection('dashboard')">← Zurück</button>
+    <div class="page-title" style="margin-bottom:0;">🟢 Live</div>
+  </div>
+  <div class="card" style="text-align:center;padding:40px;margin-bottom:22px;">
+    <div style="font-size:13px;color:var(--col-muted);margin-bottom:10px;" id="live-test-title">–</div>
+    <div class="live-code-display" id="live-code" onclick="copyCode()" title="Klicken zum Kopieren">––––––</div>
+    <div style="font-size:12px;color:var(--col-dim);margin-top:8px;">Klicken zum Kopieren</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="showQR()">📷 QR anzeigen</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyLink()">🔗 Link kopieren</button>
+    </div>
+    <img id="live-qr" src="" alt="QR" style="width:100px;height:100px;border-radius:10px;margin:14px auto 0;display:none;">
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+      <div><div style="font-family:var(--font-display);font-size:2rem;font-weight:900;" id="live-subcount">0</div><div style="font-size:12px;color:var(--col-muted);">Abgaben</div></div>
+      <div><div class="timer-disp" id="live-timer">45:00</div><div style="font-size:12px;color:var(--col-muted);">Verbleibend</div></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="adjustTime(-5)">−5 Min</button>
+      <button class="btn btn-secondary btn-sm" id="btn-pause" onclick="togglePause()">⏸ Pause</button>
+      <button class="btn btn-secondary btn-sm" onclick="adjustTime(5)">+5 Min</button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;">
+      <button class="btn btn-secondary" onclick="collectAll()">📥 Alle einsammeln</button>
+      <button class="btn btn-danger" onclick="endTest()">⏹ Test beenden</button>
+    </div>
+  </div>
+  <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:12px;" id="live-students-label">Beigetretene Schüler</div>
+  <div id="live-students-list"></div>
+</section>
+
+<!-- ═══ SUBMISSIONS ═══ -->
+<section class="section" id="sec-submissions">
+  <div class="page-title">Abgaben</div>
+  <div class="page-sub">Alle eingereichten Arbeiten</div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+    <select class="f-select" id="filter-test" style="max-width:250px;" onchange="renderSubmissions()"><option value="">Alle Tests</option></select>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Schüler</th><th>Test</th><th>Abgabezeit</th><th>Score</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="subs-tbody"></tbody></table></div>
+</section>
+
+<!-- ═══ CORRECT ═══ -->
+<section class="section" id="sec-correct">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div><div class="page-title">Korrigieren</div></div>
+    <select class="f-select" id="correct-sel" style="max-width:300px;" onchange="loadCorr()"><option value="">Abgabe wählen…</option></select>
+  </div>
+  <div id="correction-area">
+    <div style="text-align:center;padding:60px;color:var(--col-muted);">
+      <div style="font-size:3rem;margin-bottom:14px;">✅</div>
+      <div>Wähle eine Abgabe zum Korrigieren</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<section class="section" id="sec-stats">
+  <div class="page-title">Statistiken</div>
+  <div class="page-sub">Überblick über Klassen und Ergebnisse</div>
+  <div class="stat-grid" id="stats-cards"></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:8px;">
+    <div class="card"><h3 style="font-family:var(--font-display);margin-bottom:16px;font-size:1rem;">Notenverteilung</h3><div id="stats-grades"></div></div>
+    <div class="card"><h3 style="font-family:var(--font-display);margin-bottom:16px;font-size:1rem;">Letzte Abgaben</h3><div id="stats-recent"></div></div>
+  </div>
+</section>
+
+<!-- ═══ PROFILE ═══ -->
+<section class="section" id="sec-profile">
+  <div class="page-title">Profil</div>
+  <div class="page-sub">Dein Lehrerkonto verwalten</div>
+  <div class="profile-card">
+    <div style="display:flex;flex-direction:column;gap:15px;margin-bottom:24px;">
+      <div><label class="f-label">Anrede</label><select class="f-select" id="p-title"><option>Herr</option><option>Frau</option><option>Dr.</option><option>Prof.</option></select></div>
+      <div><label class="f-label">Name</label><input class="f-input" id="p-name" placeholder="Vorname Nachname"></div>
+      <div><label class="f-label">Fach</label><input class="f-input" id="p-subject" placeholder="Hauptfach"></div>
+      <div><label class="f-label">Schule / Ort</label><input class="f-input" id="p-city" placeholder="Schulstadt"></div>
+      <div><label class="f-label">Passwort ändern</label><input class="f-input" id="p-pw" type="password" placeholder="Leer = unverändert"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveProfile()">💾 Speichern</button>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--col-border);">
+      <div style="font-size:13px;color:var(--col-muted);margin-bottom:10px;">Admin-Portal (Sonderzugangsdaten erforderlich)</div>
+      <button class="btn btn-secondary btn-sm" onclick="openAdminDlg()">🛡️ Admin-Login</button>
+    </div>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--col-border);">
+      <div style="font-size:13px;color:var(--col-muted);margin-bottom:10px;color:var(--col-red);">Gefahrenzone</div>
+      <button class="btn btn-danger" onclick="clearAllData()">🗑️ Alle Daten löschen</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ADMIN ═══ -->
+<section class="section" id="sec-admin">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+    <div class="page-title" style="margin-bottom:0;">Admin-Bereich</div>
+    <span class="adm-badge">ADMIN</span>
+  </div>
+  <div class="stat-grid" id="admin-stat-grid"></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchAdmTab('teachers',this)">Lehrer</button>
+    <button class="tab" onclick="switchAdmTab('tests',this)">Tests</button>
+    <button class="tab" onclick="switchAdmTab('students',this)">Schüler</button>
+    <button class="tab" onclick="switchAdmTab('subs',this)">Abgaben</button>
+  </div>
+  <div id="admin-content"></div>
+</section>
+
+</main>
+
+<!-- ═══ DIALOGS ═══ -->
+<div class="dialog-bg hidden" id="dlg-start">
+  <div class="dialog">
+    <div class="dlg-title">🚀 Test starten</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label class="f-label">Dauer (Minuten)</label><input class="f-input" id="dlg-dur" type="number" value="45" min="5" max="180"></div>
+      <div><label class="f-label">Fach</label><input class="f-input" id="dlg-subj" placeholder="Mathematik"></div>
+      <div><label class="f-label">Klasse</label><input class="f-input" id="dlg-grade" placeholder="8a"></div>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button class="btn btn-secondary" onclick="closeDlg('dlg-start')">Abbrechen</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="startTest()">Starten & Code generieren</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-bg hidden" id="dlg-code">
+  <div class="dialog" style="text-align:center;">
+    <div class="dlg-title">✅ Test läuft!</div>
+    <div style="color:var(--col-muted);font-size:14px;margin-bottom:14px;">Teile diesen Code mit deinen Schülern</div>
+    <div class="live-code-display" id="dlg-code-val" style="font-size:3.2rem;" onclick="navigator.clipboard?.writeText(this.textContent);KT.toast('Code kopiert!','success')">––––––</div>
+    <img id="dlg-qr" src="" alt="QR" style="width:160px;height:160px;border-radius:12px;margin:16px auto;display:block;">
+    <div style="font-size:13px;color:var(--col-dim);margin-bottom:20px;" id="dlg-link"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-secondary" onclick="closeDlg('dlg-code')">Schließen</button>
+      <button class="btn btn-primary" onclick="closeDlg('dlg-code');showSection('live')">🔴 Live Ansicht</button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-bg hidden" id="dlg-admin">
+  <div class="dialog">
+    <div class="dlg-title">🛡️ Admin-Login</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label class="f-label">Name (vollständig)</label><input class="f-input" id="adm-n"></div>
+      <div><label class="f-label">Stadt</label><input class="f-input" id="adm-c"></div>
+      <div><label class="f-label">Passwort</label><input class="f-input" id="adm-p" type="password"></div>
+      <div id="adm-err" style="color:var(--col-red);font-size:13px;display:none;">Falsche Zugangsdaten.</div>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button class="btn btn-secondary" onclick="closeDlg('dlg-admin')">Abbrechen</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="doAdminLogin()">Einloggen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="kt.js"></script>
+<script>
+let currentPage=0, pages=[{id:KT.uid(),label:'Seite 1',elements:[]}];
+let editingTestId=null, liveTestId=null;
+let timerInterval=null, timerPaused=false, remainingSec=0;
+let previewMode=false, zoom=100;
+let isAdmin=false;
+
+document.addEventListener('DOMContentLoaded',()=>{
+  KT.seedDemoData();
+  loadProfile();
+  renderPages(); renderA4(); renderTests(); renderDraftsList();
+  const d=KT.load();
+  const live=d.tests.find(t=>t.status==='live');
+  if(live){liveTestId=live.id;remainingSec=Math.max(0,(live.duration||45)*60-Math.floor((Date.now()-live.startedAt)/1000));document.getElementById('nav-live').style.display='';startTimerInterval();}
+  setTimeout(()=>KT.showTutorial([{emoji:'🎉',title:'Willkommen bei Fusion!',desc:'Dies ist die Lehreransicht. Demo-Daten wurden geladen – schau dir die Abgaben und Korrekturen an!'}],'lehrer-welcome'),700);
+
+  document.querySelectorAll('[data-sec]').forEach(btn=>{
+    btn.addEventListener('click',()=>{showSection(btn.dataset.sec);closeSidebar();});
+  });
+  document.querySelectorAll('.dialog-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.add('hidden');}));
+});
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('[data-sec]').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelector(`[data-sec="${id}"]`)?.classList.add('active');
+  if(id==='dashboard')renderTests();
+  if(id==='submissions')renderSubmissions();
+  if(id==='correct')fillCorrSel();
+  if(id==='stats')renderStats();
+  if(id==='live')updateLive();
+  if(id==='create'){renderPages();renderDraftsList();}
+  if(id==='admin')renderAdmin();
+}
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-overlay').style.display=document.getElementById('sidebar').classList.contains('open')?'block':'none';}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').style.display='none';}
+function closeDlg(id){document.getElementById(id).classList.add('hidden');}
+
+// ── Builder ──
+function renderPages(){
+  const bar=document.getElementById('pages-bar'); bar.innerHTML='';
+  pages.forEach((p,i)=>{
+    const tab=document.createElement('button'); tab.className='page-tab'+(i===currentPage?' active':''); tab.textContent=p.label;
+    tab.onclick=()=>{currentPage=i;renderPages();renderA4();};
+    bar.appendChild(tab);
+    if(pages.length>1){const x=document.createElement('button');x.style.cssText='background:none;border:none;color:var(--col-dim);cursor:pointer;font-size:11px;padding:2px 5px;';x.textContent='✕';x.onclick=e=>{e.stopPropagation();pages.splice(i,1);if(currentPage>=pages.length)currentPage=pages.length-1;renderPages();renderA4();};bar.appendChild(x);}
+  });
+  const add=document.createElement('button'); add.className='btn btn-ghost btn-sm'; add.textContent='+ Seite';
+  add.onclick=()=>{pages.push({id:KT.uid(),label:'Seite '+(pages.length+1),elements:[]});currentPage=pages.length-1;renderPages();renderA4();};
+  bar.appendChild(add);
+}
+function setZoom(z){zoom=Math.max(50,Math.min(150,z));document.getElementById('a4-wrap').style.transform=`scale(${zoom/100})`;document.getElementById('zoom-lbl').textContent=zoom+'%';}
+function updateBg(){document.getElementById('a4-page').className='a4-page'+(document.getElementById('b-bg').value?' a4-'+document.getElementById('b-bg').value:'');}
+function togglePreview(){previewMode=!previewMode;renderA4();}
+
+function addEl(type){
+  const id=KT.uid(); let el={id,type};
+  if(type==='heading')el={...el,level:'h2',text:'Überschrift'};
+  else if(type==='text')el={...el,text:'Hier steht ein Informationstext.'};
+  else if(type==='mc')el={...el,question:'Frage?',options:['Option A','Option B','Option C','Option D'],correct:0,points:1};
+  else if(type==='multi')el={...el,question:'Welche sind richtig?',options:['Option A','Option B','Option C'],correct:[0],points:2};
+  else if(type==='free')el={...el,question:'Beantworte die Frage.',rows:4,points:0};
+  else if(type==='fillblank')el={...el,text:'Die Hauptstadt von Deutschland ist _____.', answer:'Berlin'};
+  else if(type==='table')el={...el,data:[['Spalte 1','Spalte 2','Spalte 3'],['','',''],['','','']]};
+  pages[currentPage].elements.push(el); renderA4();
+}
+function moveEl(id,d){const els=pages[currentPage].elements;const i=els.findIndex(x=>x.id===id);if(i+d<0||i+d>=els.length)return;[els[i],els[i+d]]=[els[i+d],els[i]];renderA4();}
+function dupEl(id){const els=pages[currentPage].elements;const i=els.findIndex(x=>x.id===id);const c=JSON.parse(JSON.stringify(els[i]));c.id=KT.uid();els.splice(i+1,0,c);renderA4();}
+function delEl(id){pages[currentPage].elements=pages[currentPage].elements.filter(x=>x.id!==id);renderA4();}
+function getEl(id){for(const p of pages){const e=p.elements.find(x=>x.id===id);if(e)return e;}return null;}
+
+function renderA4(){
+  const page=document.getElementById('a4-page');
+  const bg=document.getElementById('b-bg').value;
+  page.className='a4-page'+(bg?' a4-'+bg:'');
+  page.innerHTML='';
+  const els=pages[currentPage]?.elements||[];
+  if(!els.length&&!previewMode){page.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#bbb;font-size:14px;border:2px dashed #ddd;border-radius:8px;margin:8px;">← Elemente hinzufügen</div>';return;}
+  els.forEach(el=>{
+    const wrap=document.createElement('div'); wrap.className='builder-el';
+    if(!previewMode){
+      const ctrl=document.createElement('div'); ctrl.className='el-ctrl';
+      ctrl.innerHTML=`<button class="el-ctrl-btn" onclick="moveEl('${el.id}',-1)" title="Hoch">↑</button><button class="el-ctrl-btn" onclick="moveEl('${el.id}',1)" title="Runter">↓</button><button class="el-ctrl-btn" onclick="dupEl('${el.id}')" title="Duplizieren">⧉</button><button class="el-ctrl-btn" onclick="delEl('${el.id}')" title="Löschen">✕</button>`;
+      wrap.appendChild(ctrl);
+    }
+    const inner=document.createElement('div');
+    if(el.type==='heading'){
+      if(!previewMode){const sel=document.createElement('select');sel.style.cssText='font-size:11px;margin-bottom:4px;background:#f5f5f5;border:1px solid #ddd;border-radius:4px;padding:2px 5px;color:#333';['h1','h2','h3'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v.toUpperCase();if(el.level===v)o.selected=true;sel.appendChild(o);});sel.onchange=()=>{el.level=sel.value;renderA4();};inner.appendChild(sel);}
+      const h=document.createElement(el.level);h.contentEditable=!previewMode;h.textContent=el.text;h.style.cssText='font-family:Georgia,serif;color:#111;outline:none;';h.onblur=()=>el.text=h.textContent;inner.appendChild(h);
+    } else if(el.type==='text'){
+      const p=document.createElement('p');p.contentEditable=!previewMode;p.textContent=el.text;p.style.cssText='color:#333;font-size:14px;outline:none;line-height:1.6;';p.onblur=()=>el.text=p.textContent;inner.appendChild(p);
+    } else if(el.type==='mc'||el.type==='multi'){
+      const tag=document.createElement('div');tag.style.cssText=`display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:8px;color:#fff;background:${el.type==='mc'?'#3b82f6':'#6366f1'}`;tag.textContent=el.type==='mc'?'MC':'MULTI';inner.appendChild(tag);
+      const qi=document.createElement('input');qi.value=el.question;qi.style.cssText='width:calc(100% - 8px);border:none;border-bottom:1.5px solid #ccc;font-weight:600;font-size:14px;color:#111;outline:none;padding:2px 0;margin-bottom:10px;background:transparent;';qi.onchange=()=>el.question=qi.value;inner.appendChild(qi);
+      if(!previewMode){const pr=document.createElement('div');pr.style.cssText='font-size:12px;color:#888;margin-bottom:8px;display:flex;gap:8px;align-items:center;';pr.innerHTML=`Punkte: <input type="number" min="0" max="20" value="${el.points||1}" style="width:50px;border:1px solid #ddd;border-radius:4px;padding:2px 6px;font-size:12px;" onchange="getEl('${el.id}').points=parseInt(this.value)||0">`;inner.appendChild(pr);}
+      el.options.forEach((opt,oi)=>{
+        const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;margin:4px 0;';
+        const inp=document.createElement('input');inp.type=el.type==='mc'?'radio':'checkbox';inp.checked=el.type==='mc'?el.correct===oi:(el.correct||[]).includes(oi);inp.style.cssText='accent-color:#6d28d9;width:16px;height:16px;cursor:pointer;';inp.disabled=!!previewMode;
+        if(!previewMode)inp.onchange=()=>{if(el.type==='mc'){el.correct=oi;renderA4();}else{const c=el.correct||[];el.correct=inp.checked?[...c,oi]:c.filter(x=>x!==oi);}};
+        const oi2=document.createElement('input');oi2.value=opt;oi2.style.cssText='border:none;border-bottom:1px solid #eee;outline:none;font-size:13px;color:#333;flex:1;background:transparent;';oi2.disabled=!!previewMode;oi2.onchange=()=>el.options[oi]=oi2.value;
+        row.appendChild(inp);row.appendChild(oi2);
+        if(!previewMode){const del=document.createElement('button');del.style.cssText='background:none;border:none;color:#bbb;cursor:pointer;font-size:12px;';del.textContent='✕';del.onclick=()=>{el.options.splice(oi,1);if(el.type==='mc'&&el.correct>=el.options.length)el.correct=0;renderA4();};row.appendChild(del);}
+        inner.appendChild(row);
+      });
+      if(!previewMode){const ab=document.createElement('button');ab.style.cssText='font-size:12px;color:#888;background:none;border:1px dashed #ddd;border-radius:4px;padding:3px 10px;cursor:pointer;margin-top:6px;';ab.textContent='+ Option';ab.onclick=()=>{el.options.push('Option '+(el.options.length+1));renderA4();};inner.appendChild(ab);}
+    } else if(el.type==='free'){
+      const qi=document.createElement('input');qi.value=el.question;qi.style.cssText='width:100%;border:none;border-bottom:1.5px solid #ccc;font-weight:600;font-size:14px;color:#111;outline:none;padding:2px 0;margin-bottom:10px;background:transparent;';qi.disabled=!!previewMode;qi.onchange=()=>el.question=qi.value;inner.appendChild(qi);
+      const ta=document.createElement('textarea');ta.rows=el.rows||4;ta.disabled=true;ta.style.cssText='width:100%;border:1.5px solid #e0e0e0;border-radius:6px;padding:10px;font-size:13px;color:#999;resize:none;background:#fafafa;font-family:Georgia,serif;';ta.placeholder='Schülerantwort…';inner.appendChild(ta);
+    } else if(el.type==='fillblank'){
+      if(!previewMode){const te=document.createElement('div');te.contentEditable=true;te.textContent=el.text;te.style.cssText='outline:none;background:#f8f8f8;border-radius:4px;padding:4px 8px;font-size:14px;color:#333;';te.onblur=()=>el.text=te.textContent;inner.appendChild(te);const ar=document.createElement('div');ar.style.cssText='font-size:12px;color:#888;margin-top:4px;display:flex;align-items:center;gap:6px;';ar.innerHTML='Lösung: <input value="'+el.answer+'" style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;padding:2px 4px;" onchange="getEl(\''+el.id+'\').answer=this.value">';inner.appendChild(ar);}
+      else{const sp=document.createElement('span');sp.textContent=el.text.replace('_____','___________');sp.style.cssText='font-size:14px;color:#333;';inner.appendChild(sp);}
+    } else if(el.type==='sep'){
+      const hr=document.createElement('hr');hr.style.cssText='border:none;border-top:2px solid #e0e0e0;margin:4px 0;';inner.appendChild(hr);
+    } else if(el.type==='table'){
+      const tbl=document.createElement('table');tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
+      el.data.forEach((row,ri)=>{const tr=document.createElement('tr');row.forEach((cell,ci)=>{const td=document.createElement('td');td.contentEditable=!previewMode;td.textContent=cell;td.style.cssText='border:1px solid #ccc;padding:6px 8px;';if(ri===0)td.style.fontWeight='600';td.onblur=()=>el.data[ri][ci]=td.textContent;tr.appendChild(td);});tbl.appendChild(tr);});
+      inner.appendChild(tbl);
+      if(!previewMode){const cr=document.createElement('div');cr.style.cssText='display:flex;gap:6px;margin-top:6px;';const ar=document.createElement('button');ar.style.cssText='font-size:11px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:2px 8px;cursor:pointer;';ar.textContent='+ Zeile';ar.onclick=()=>{el.data.push(Array(el.data[0].length).fill(''));renderA4();};const ac=document.createElement('button');ac.style=ar.style;ac.textContent='+ Spalte';ac.onclick=()=>{el.data.forEach(r=>r.push(''));renderA4();};cr.appendChild(ar);cr.appendChild(ac);inner.appendChild(cr);}
+    }
+    wrap.appendChild(inner); page.appendChild(wrap);
+  });
+}
+
+// ── Save/Load ──
+function saveDraft(){
+  const data=KT.load();
+  const id=editingTestId||KT.uid(); editingTestId=id;
+  const draft={id,title:document.getElementById('b-title').value||'Ohne Titel',subject:document.getElementById('b-subject').value,grade:document.getElementById('b-grade').value,duration:parseInt(document.getElementById('b-duration').value)||45,background:document.getElementById('b-bg').value,pages:JSON.parse(JSON.stringify(pages)),status:'draft',createdAt:Date.now()};
+  const idx=data.tests.findIndex(t=>t.id===id);
+  if(idx>=0)data.tests[idx]={...data.tests[idx],...draft}; else data.tests.push(draft);
+  KT.save(data); KT.toast('Entwurf gespeichert','success'); renderDraftsList();
+}
+function saveTemplate(){
+  const data=KT.load(); if(!data.templates)data.templates=[];
+  data.templates.push({id:KT.uid(),title:document.getElementById('b-title').value,subject:document.getElementById('b-subject').value,grade:document.getElementById('b-grade').value,duration:parseInt(document.getElementById('b-duration').value)||45,background:document.getElementById('b-bg').value,pages:JSON.parse(JSON.stringify(pages)),createdAt:Date.now()});
+  KT.save(data); KT.toast('Als Vorlage gespeichert','success');
+}
+function renderDraftsList(){
+  const data=KT.load();
+  const drafts=data.tests.filter(t=>t.status==='draft');
+  const el=document.getElementById('drafts-list');
+  if(!drafts.length){el.textContent='–';return;}
+  el.innerHTML=drafts.map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--col-border);">
+    <span style="cursor:pointer;font-size:12px;color:var(--col-accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;" onclick="loadDraft('${d.id}')" title="${d.title}">${d.title}</span>
+    <button onclick="delDraft('${d.id}')" style="background:none;border:none;color:var(--col-dim);cursor:pointer;font-size:12px;">✕</button>
+  </div>`).join('');
+}
+function loadDraft(id){
+  const data=KT.load(); const t=data.tests.find(x=>x.id===id); if(!t)return;
+  document.getElementById('b-title').value=t.title||'';
+  document.getElementById('b-subject').value=t.subject||'';
+  document.getElementById('b-grade').value=t.grade||'';
+  document.getElementById('b-duration').value=t.duration||45;
+  document.getElementById('b-bg').value=t.background||'lined';
+  pages=t.pages||[{id:KT.uid(),label:'Seite 1',elements:[]}]; currentPage=0; editingTestId=id;
+  renderPages(); renderA4(); updateBg(); KT.toast('Entwurf geladen','info');
+}
+function delDraft(id){const data=KT.load();data.tests=data.tests.filter(t=>t.id!==id);KT.save(data);renderDraftsList();}
+
+// ── Tests list ──
+function renderTests(){
+  const data=KT.load();
+  const el=document.getElementById('tests-list');
+  document.getElementById('tests-count').textContent=data.tests.length+' Tests';
+  if(!data.tests.length){el.innerHTML='<div class="card" style="text-align:center;padding:52px;"><div style="font-size:3rem;margin-bottom:14px;">📋</div><p style="color:var(--col-muted);margin-bottom:18px;">Noch keine Tests erstellt.</p><button class="btn btn-primary" onclick="showSection(\'create\')">Ersten Test erstellen →</button></div>';return;}
+  const statusMap={draft:['badge-gray','Entwurf'],live:['badge-green','🟢 Live'],ended:['badge-yellow','Beendet']};
+  el.innerHTML=data.tests.slice().reverse().map((t,idx)=>{
+    const subs=data.submissions.filter(s=>s.testId===t.id);
+    const cor=subs.filter(s=>s.corrected).length;
+    const avg=subs.filter(s=>s.score).length?Math.round(subs.reduce((a,s)=>a+(s.score?.pct||0),0)/subs.length)+'%':'–';
+    const [cls,lbl]=statusMap[t.status]||['badge-gray','–'];
+    return `<div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px;animation:cardIn .4s ${idx*.06}s both;">
+      <div style="flex:1;min-width:200px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-family:var(--font-display);font-weight:700;font-size:1.02rem;">${t.title||'Ohne Titel'}</span>
+          <span class="badge ${cls}">${lbl}</span>
+        </div>
+        <div style="font-size:12px;color:var(--col-muted);display:flex;gap:14px;flex-wrap:wrap;">
+          <span>📚 ${t.subject||'–'}</span><span>🏫 ${t.grade||'–'}</span>
+          <span>👥 ${subs.length} Abgaben</span><span>✅ ${cor}/${subs.length} korrigiert</span><span>📊 Ø ${avg}</span>
+          ${t.code?`<span style="font-family:var(--font-mono);background:var(--col-surface3);padding:1px 8px;border-radius:4px;cursor:pointer;" onclick="navigator.clipboard?.writeText('${t.code}');KT.toast('Code kopiert!','success')" title="Kopieren">🔑 ${t.code}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        ${t.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="openStartDlgFor('${t.id}')">🚀 Starten</button>`:''}
+        ${t.status==='live'?`<button class="btn btn-green btn-sm" onclick="goLive('${t.id}')">🟢 Live</button>`:''}
+        ${subs.filter(s=>!s.corrected).length>0?`<button class="btn btn-primary btn-sm" onclick="goCorrect('${t.id}')">✏️ Korrigieren</button>`:''}
+        ${subs.length>0?`<button class="btn btn-secondary btn-sm" onclick="goStats('${t.id}')">📊 Ergebnisse</button>`:''}
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTest('${t.id}')" title="Löschen">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function deleteTest(id){if(!confirm('Test wirklich löschen?'))return;const d=KT.load();d.tests=d.tests.filter(t=>t.id!==id);d.submissions=d.submissions.filter(s=>s.testId!==id);KT.save(d);renderTests();KT.toast('Test gelöscht','success');}
+function goLive(id){liveTestId=id;showSection('live');}
+function goCorrect(id){showSection('correct');const d=KT.load();const s=d.submissions.find(x=>x.testId===id&&!x.corrected);if(s){document.getElementById('correct-sel').value=s.id;loadCorr();}}
+function goStats(id){showSection('stats');}
+
+// ── Start test ──
+function openStartDlg(){document.getElementById('dlg-subj').value=document.getElementById('b-subject').value;document.getElementById('dlg-grade').value=document.getElementById('b-grade').value;document.getElementById('dlg-start').classList.remove('hidden');}
+function openStartDlgFor(id){const d=KT.load();const t=d.tests.find(x=>x.id===id);editingTestId=id;if(t){document.getElementById('dlg-subj').value=t.subject||'';document.getElementById('dlg-grade').value=t.grade||'';}document.getElementById('dlg-start').classList.remove('hidden');}
+function startTest(){
+  const dur=parseInt(document.getElementById('dlg-dur').value)||45;
+  const subj=document.getElementById('dlg-subj').value;
+  const grade=document.getElementById('dlg-grade').value;
+  const data=KT.load(); let testId=editingTestId;
+  if(!testId){
+    testId=KT.uid();
+    const test={id:testId,title:document.getElementById('b-title').value||'Neuer Test',subject:subj,grade,background:document.getElementById('b-bg').value,pages:JSON.parse(JSON.stringify(pages)),status:'live',code:KT.genCode(),duration:dur,startedAt:Date.now(),createdAt:Date.now()};
+    data.tests.push(test);
+  } else {
+    const idx=data.tests.findIndex(t=>t.id===testId);
+    if(idx>=0)Object.assign(data.tests[idx],{status:'live',code:KT.genCode(),duration:dur,subject:subj,grade,startedAt:Date.now()});
+  }
+  KT.save(data); liveTestId=testId; remainingSec=dur*60;
+  const test=KT.load().tests.find(t=>t.id===testId);
+  closeDlg('dlg-start');
+  document.getElementById('dlg-code-val').textContent=test.code;
+  const link=location.origin+location.pathname.replace('lehrer.html','schueler.html')+'?code='+test.code;
+  document.getElementById('dlg-link').textContent=link;
+  document.getElementById('dlg-qr').src=KT.qrUrl(link,160);
+  document.getElementById('dlg-code').classList.remove('hidden');
+  document.getElementById('nav-live').style.display='';
+  startTimerInterval();
+  KT.toast('Test gestartet! Code: '+test.code,'success',5000);
+}
+
+// ── Live ──
+function updateLive(){
+  const data=KT.load();
+  const test=liveTestId?data.tests.find(t=>t.id===liveTestId):null; if(!test)return;
+  document.getElementById('live-test-title').textContent=test.title+' – '+test.subject+' '+test.grade;
+  document.getElementById('live-code').textContent=test.code;
+  const subs=data.submissions.filter(s=>s.testId===test.id);
+  document.getElementById('live-subcount').textContent=subs.length;
+  const stus=data.students?.filter(s=>s.testId===test.id)||[];
+  document.getElementById('live-students-label').textContent='Schüler ('+stus.length+')';
+  const list=document.getElementById('live-students-list');
+  if(!stus.length){list.innerHTML='<div class="card" style="text-align:center;padding:32px;color:var(--col-muted);">⏳ Noch niemand beigetreten…</div>';return;}
+  list.innerHTML=stus.map(s=>{const sub=subs.find(x=>x.studentName===s.name);return `<div class="live-row"><div class="avatar">${s.name.charAt(0)}</div><div style="flex:1"><div style="font-size:14px;font-weight:600;">${s.name}</div><div style="font-size:12px;color:var(--col-muted);">Beigetreten ${new Date(s.joinedAt).toLocaleTimeString('de-DE')}</div></div><span class="badge ${sub?'badge-green':'badge-yellow'}">${sub?'✓ Abgegeben':'Aktiv'}</span></div>`;}).join('');
+}
+function startTimerInterval(){clearInterval(timerInterval);updateTimerDisp();timerInterval=setInterval(()=>{if(!timerPaused){remainingSec--;if(remainingSec<0){remainingSec=0;clearInterval(timerInterval);}updateTimerDisp();}},1000);}
+function updateTimerDisp(){const el=document.getElementById('live-timer');el.textContent=KT.fmtTime(remainingSec);el.className='timer-disp';if(remainingSec<300)el.classList.add('warn');if(remainingSec<60)el.classList.add('danger');}
+function adjustTime(m){remainingSec=Math.max(0,remainingSec+m*60);updateTimerDisp();}
+function togglePause(){timerPaused=!timerPaused;document.getElementById('btn-pause').textContent=timerPaused?'▶ Weiter':'⏸ Pause';KT.toast(timerPaused?'Timer pausiert':'Timer läuft weiter','info');}
+function copyCode(){const c=document.getElementById('live-code').textContent;navigator.clipboard?.writeText(c);KT.toast('Code kopiert!','success');}
+function showQR(){const qr=document.getElementById('live-qr');const d=KT.load();const t=d.tests.find(x=>x.id===liveTestId);if(!t)return;const link=location.origin+location.pathname.replace('lehrer.html','schueler.html')+'?code='+t.code;qr.src=KT.qrUrl(link,120);qr.style.display=qr.style.display==='none'?'block':'none';}
+function copyLink(){const d=KT.load();const t=d.tests.find(x=>x.id===liveTestId);if(!t)return;const link=location.origin+location.pathname.replace('lehrer.html','schueler.html')+'?code='+t.code;navigator.clipboard?.writeText(link);KT.toast('Link kopiert!','success');}
+function collectAll(){const data=KT.load();const t=data.tests.find(x=>x.id===liveTestId);if(!t)return;const stus=data.students?.filter(s=>s.testId===t.id)||[];const ex=new Set(data.submissions.filter(s=>s.testId===t.id).map(s=>s.studentName));stus.forEach(s=>{if(!ex.has(s.name))data.submissions.push({id:KT.uid(),testId:t.id,studentName:s.name,submittedAt:Date.now(),answers:{},score:{earned:0,total:0,pct:0},corrected:false});});KT.save(data);updateLive();KT.toast('Alle Abgaben eingesammelt','success');}
+function endTest(){if(!confirm('Test wirklich beenden?'))return;const d=KT.load();const idx=d.tests.findIndex(t=>t.id===liveTestId);if(idx>=0){d.tests[idx].status='ended';d.tests[idx].endedAt=Date.now();}KT.save(d);clearInterval(timerInterval);document.getElementById('nav-live').style.display='none';KT.toast('Test beendet','success');showSection('dashboard');}
+
+// ── Submissions ──
+function renderSubmissions(){
+  const data=KT.load();
+  const filterEl=document.getElementById('filter-test');
+  const cur=filterEl.value;
+  filterEl.innerHTML='<option value="">Alle Tests</option>'+data.tests.map(t=>`<option value="${t.id}" ${cur===t.id?'selected':''}>${t.title}</option>`).join('');
+  const subs=data.submissions.filter(s=>!cur||s.testId===cur);
+  const tbody=document.getElementById('subs-tbody');
+  if(!subs.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--col-muted);">Keine Abgaben</td></tr>';return;}
+  tbody.innerHTML=subs.slice().reverse().map(s=>{const t=data.tests.find(x=>x.id===s.testId);return `<tr>
+    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar" style="width:30px;height:30px;font-size:12px;">${s.studentName?.charAt(0)||'?'}</div>${s.studentName}</div></td>
+    <td style="color:var(--col-muted);font-size:13px;">${t?.title||'–'}</td>
+    <td style="font-size:13px;color:var(--col-muted);">${new Date(s.submittedAt).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</td>
+    <td><div style="display:flex;align-items:center;gap:8px;min-width:100px;"><div class="prog-wrap" style="flex:1;"><div class="prog-bar" style="width:${s.score?.pct||0}%;"></div></div><span style="font-size:12px;color:var(--col-muted);">${s.score?.pct||0}%</span></div></td>
+    <td><span class="badge ${s.corrected?'badge-green':'badge-yellow'}">${s.corrected?'✓ Fertig':'Offen'}</span></td>
+    <td><button class="btn btn-secondary btn-sm" onclick="goCorrSub('${s.id}')">✏️ Korrigieren</button></td>
+  </tr>`;}).join('');
+}
+function goCorrSub(id){document.getElementById('correct-sel').value=id;showSection('correct');loadCorr();}
+
+// ── Correction ──
+function fillCorrSel(){
+  const data=KT.load();
+  const sel=document.getElementById('correct-sel');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Abgabe wählen…</option>'+data.submissions.map(s=>{const t=data.tests.find(x=>x.id===s.testId);return `<option value="${s.id}" ${cur===s.id?'selected':''}>${s.studentName} – ${t?.title||'?'} ${s.corrected?'✓':''}</option>`;}).join('');
+  if(cur)sel.value=cur;
+}
+function loadCorr(){
+  const id=document.getElementById('correct-sel').value; if(!id)return;
+  const data=KT.load(); const sub=data.submissions.find(s=>s.id===id); if(!sub)return;
+  const test=data.tests.find(t=>t.id===sub.testId); if(!test)return;
+  const area=document.getElementById('correction-area');
+  const questions=[];
+  test.pages?.forEach(p=>p.elements?.forEach(el=>{if(['mc','multi','free'].includes(el.type))questions.push(el);}));
+  let autoE=0,autoT=0;
+  const qHtml=questions.map((q,qi)=>{
+    const ans=sub.answers?.[q.id];
+    if(q.type==='mc'){const pts=q.points||1;autoT+=pts;const ok=ans===q.correct;if(ok)autoE+=pts;
+      return `<div class="q-block" style="border-left:3px solid ${ok?'var(--col-green)':'var(--col-red)'};">
+        <div style="display:flex;gap:8px;margin-bottom:10px;"><span style="font-weight:700;color:var(--col-muted);font-size:13px;">F${qi+1}</span><span style="font-size:13px;font-weight:600;flex:1;">${q.question}</span><span class="badge badge-purple">MC ${q.points||1}P</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">${q.options.map((o,oi)=>`<span class="corr-opt ${oi===q.correct?'cor':oi===ans&&ans!==q.correct?'wrong':'neu'}">${oi===q.correct?'✓':oi===ans?'✗':'　'}${o}</span>`).join('')}</div>
+        <div style="margin-top:8px;font-size:13px;">${ok?`<span style="color:var(--col-green);">✓ Richtig (${q.points||1}/${q.points||1} P)</span>`:`<span style="color:var(--col-red);">✗ Falsch (0/${q.points||1} P)</span>`}</div>
+      </div>`;
+    } else if(q.type==='multi'){const pts=q.points||1;autoT+=pts;const ok=(ans||[]).slice().sort().join(',')===((q.correct||[]).slice().sort().join(','));if(ok)autoE+=pts;
+      return `<div class="q-block" style="border-left:3px solid ${ok?'var(--col-green)':'var(--col-red)'};">
+        <div style="display:flex;gap:8px;margin-bottom:10px;"><span style="font-weight:700;color:var(--col-muted);font-size:13px;">F${qi+1}</span><span style="font-size:13px;font-weight:600;flex:1;">${q.question}</span><span class="badge badge-blue">MULTI ${pts}P</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">${q.options.map((o,oi)=>{const isCor=(q.correct||[]).includes(oi);const isGiv=(ans||[]).includes(oi);let cl=isCor&&isGiv?'cor':(!isCor&&isGiv)||( isCor&&!isGiv)?'wrong':'neu';return `<span class="corr-opt ${cl}">${isGiv?'☑':'☐'} ${o}</span>`;}).join('')}</div>
+        <div style="margin-top:8px;font-size:13px;">${ok?`<span style="color:var(--col-green);">✓ Richtig (${pts}/${pts} P)</span>`:`<span style="color:var(--col-red);">✗ Falsch (0/${pts} P)</span>`}</div>
+      </div>`;
+    } else {
+      const prevPts=sub.manualPoints?.[q.id]||0;
+      return `<div class="q-block">
+        <div style="display:flex;gap:8px;margin-bottom:10px;"><span style="font-weight:700;color:var(--col-muted);font-size:13px;">F${qi+1}</span><span style="font-size:13px;font-weight:600;flex:1;">${q.question}</span><span class="badge badge-gray">FREI</span></div>
+        <div style="background:var(--col-surface2);padding:12px;border-radius:var(--r-md);font-size:13px;color:var(--col-muted);white-space:pre-wrap;min-height:40px;">${ans||'(keine Antwort)'}</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
+          <span style="font-size:13px;color:var(--col-muted);">Punkte:</span>
+          <input type="number" min="0" max="20" value="${prevPts}" class="f-input" style="width:70px;" data-el="${q.id}" data-type="pts" oninput="updateManual(this)">
+          <input placeholder="Kommentar…" class="f-input" style="flex:1;" value="${sub.manualComments?.[q.id]||''}" data-el="${q.id}" data-type="cmt" oninput="updateManual(this)">
+        </div>
+      </div>`;
+    }
+  }).join('');
+
+  let curGrade=sub.grade||'';
+  area.innerHTML=`
+    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div class="avatar avatar-lg">${sub.studentName?.charAt(0)||'?'}</div>
+      <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${sub.studentName}</div><div style="font-size:12px;color:var(--col-muted);">Abgegeben: ${new Date(sub.submittedAt).toLocaleString('de-DE')}</div></div>
+      <div style="text-align:right;"><div style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;color:var(--col-accent);">${sub.score?.earned||0}/${autoT}</div><div style="font-size:12px;color:var(--col-muted);">${sub.score?.pct||0}%</div></div>
+    </div>
+    ${qHtml}
+    <div class="card" style="margin-top:16px;">
+      <h3 style="font-family:var(--font-display);margin-bottom:16px;">Gesamtbewertung</h3>
+      <div style="margin-bottom:14px;font-size:13px;color:var(--col-muted);">Auto-Score: <strong>${autoE}/${autoT} Punkte</strong></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="grade-btns">
+        ${['1+','1','1-','2+','2','2-','3+','3','3-','4+','4','4-','5','5-','6'].map(g=>`<button class="grade-btn${curGrade===g?' sel':''}" onclick="selectGrade('${g}')" style="${curGrade===g?`background:${KT.gradeColor(g)}22;border-color:${KT.gradeColor(g)};color:${KT.gradeColor(g)};`:''}">${g}</button>`).join('')}
+      </div>
+      <div style="margin-bottom:14px;"><label class="f-label">Feedback</label><textarea class="f-textarea" id="fb-text" rows="3">${sub.feedback||''}</textarea></div>
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <label class="f-label" style="margin:0;">Unterschrift</label>
+          ${['#7c6af5','#3dd68c','#5ba4f5','#f87171','#333'].map(c=>`<div class="color-dot${c==='#7c6af5'?' active':''}" style="background:${c};" onclick="setSigCol(this,'${c}')"></div>`).join('')}
+          <select id="sig-sz" style="font-size:12px;padding:2px 6px;background:var(--col-surface3);border:1px solid var(--col-border);color:var(--col-text);border-radius:4px;">
+            <option value="2">Dünn</option><option value="4" selected>Normal</option><option value="7">Dick</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="clearSig()">✕ Löschen</button>
+        </div>
+        <canvas id="sig-canvas" class="sig-canvas" width="540" height="110"></canvas>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" onclick="saveCorrDraft('${id}')">💾 Entwurf</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="sendCorr('${id}')">✉️ An Schüler senden</button>
+      </div>
+    </div>`;
+
+  area.dataset.subId=id; area.dataset.autoE=autoE; area.dataset.autoT=autoT;
+  area.manualData=JSON.parse(JSON.stringify(sub.manualPoints||{}));
+  area.manualCmt=JSON.parse(JSON.stringify(sub.manualComments||{}));
+  area.selGrade=curGrade;
+  initSig();
+}
+
+function selectGrade(g){
+  const area=document.getElementById('correction-area'); area.selGrade=g;
+  document.querySelectorAll('.grade-btn').forEach(b=>{
+    const bg=b.textContent;
+    if(bg===g){b.classList.add('sel');b.style.background=KT.gradeColor(g)+'22';b.style.borderColor=KT.gradeColor(g);b.style.color=KT.gradeColor(g);}
+    else{b.classList.remove('sel');b.style.background='';b.style.borderColor='';b.style.color='';}
+  });
+}
+function updateManual(el){const area=document.getElementById('correction-area');const id=el.dataset.el;if(!area.manualData)area.manualData={};if(!area.manualCmt)area.manualCmt={};if(el.dataset.type==='pts')area.manualData[id]=parseFloat(el.value)||0;else area.manualCmt[id]=el.value;}
+
+let sigCtx=null,sigDrawing=false,sigLast=null,sigColor='#7c6af5';
+function initSig(){
+  const c=document.getElementById('sig-canvas'); if(!c)return;
+  sigCtx=c.getContext('2d'); sigCtx.strokeStyle=sigColor; sigCtx.lineWidth=4; sigCtx.lineCap='round'; sigCtx.lineJoin='round';
+  const pos=e=>{const r=c.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:src.clientX-r.left,y:src.clientY-r.top};};
+  c.onmousedown=c.ontouchstart=e=>{sigDrawing=true;sigLast=pos(e);e.preventDefault();};
+  c.onmousemove=c.ontouchmove=e=>{if(!sigDrawing)return;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(sigLast.x,sigLast.y);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();sigLast=p;e.preventDefault();};
+  c.onmouseup=c.ontouchend=()=>sigDrawing=false;
+}
+function setSigCol(el,c){sigColor=c;if(sigCtx){sigCtx.strokeStyle=c;sigCtx.lineWidth=parseInt(document.getElementById('sig-sz').value);}document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));el.classList.add('active');}
+function clearSig(){if(sigCtx){const c=document.getElementById('sig-canvas');sigCtx.clearRect(0,0,c.width,c.height);}}
+
+function saveCorrDraft(id){
+  const data=KT.load(); const idx=data.submissions.findIndex(s=>s.id===id); if(idx<0)return;
+  const area=document.getElementById('correction-area');
+  data.submissions[idx].manualPoints=area.manualData||{};
+  data.submissions[idx].manualComments=area.manualCmt||{};
+  const mE=Object.values(area.manualData||{}).reduce((a,b)=>a+b,0);
+  const autoE=parseInt(area.dataset.autoE)||0; const autoT=parseInt(area.dataset.autoT)||0;
+  data.submissions[idx].score={earned:autoE+mE,total:autoT,pct:autoT>0?Math.round((autoE+mE)/autoT*100):0};
+  data.submissions[idx].grade=area.selGrade||'';
+  data.submissions[idx].feedback=document.getElementById('fb-text')?.value||'';
+  KT.save(data); KT.toast('Entwurf gespeichert','success');
+}
+function sendCorr(id){
+  saveCorrDraft(id);
+  const data=KT.load(); const idx=data.submissions.findIndex(s=>s.id===id); if(idx<0)return;
+  const c=document.getElementById('sig-canvas'); if(c)data.submissions[idx].signature=c.toDataURL();
+  data.submissions[idx].corrected=true; data.submissions[idx].sentAt=Date.now();
+  KT.save(data); KT.toast('Korrektur gesendet! ✉️','success'); fillCorrSel();
+}
+
+// ── Stats ──
+function renderStats(){
+  const data=KT.load(); const subs=data.submissions;
+  const cards=[
+    {icon:'📋',val:data.tests.length,label:'Tests gesamt',sub:data.tests.filter(t=>t.status==='live').length+' aktiv'},
+    {icon:'👥',val:new Set(subs.map(s=>s.studentName)).size,label:'Schüler',sub:subs.length+' Abgaben'},
+    {icon:'✅',val:subs.filter(s=>s.corrected).length,label:'Korrigiert',sub:subs.filter(s=>!s.corrected).length+' offen'},
+    {icon:'📊',val:subs.filter(s=>s.score).length?Math.round(subs.reduce((a,s)=>a+(s.score?.pct||0),0)/subs.filter(s=>s.score).length)+'%':'–',label:'Ø Ergebnis',sub:'Alle Tests'},
+  ];
+  document.getElementById('stats-cards').innerHTML=cards.map((c,i)=>`<div class="stat-card" style="animation-delay:${i*.07}s"><div class="stat-icon">${c.icon}</div><div class="stat-val">${c.val}</div><div class="stat-label">${c.label}</div><div class="stat-sub">${c.sub}</div></div>`).join('');
+  const dist={};subs.filter(s=>s.grade).forEach(s=>{const g=s.grade.replace(/[+\-]/g,'');dist[g]=(dist[g]||0)+1;});
+  const maxG=Math.max(...Object.values(dist),1);
+  document.getElementById('stats-grades').innerHTML=Object.entries(dist).length?`<div style="display:flex;gap:8px;align-items:flex-end;height:80px;">${['1','2','3','4','5','6'].map(g=>{const n=dist[g]||0;return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:11px;color:var(--col-muted);">${n}</div><div style="width:100%;height:${Math.max(4,n/maxG*60)}px;background:${KT.gradeColor(g)};border-radius:4px 4px 0 0;opacity:${n?1:.2};transition:height .5s;"></div><div style="font-size:12px;font-weight:600;color:${KT.gradeColor(g)};">${g}</div></div>`;}).join('')}</div>`:'<div style="color:var(--col-muted);font-size:13px;">Keine benoteten Abgaben</div>';
+  const recent=subs.slice().sort((a,b)=>b.submittedAt-a.submittedAt).slice(0,6);
+  document.getElementById('stats-recent').innerHTML=recent.map(s=>{const t=data.tests.find(x=>x.id===s.testId);return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div class="avatar" style="width:30px;height:30px;font-size:12px;">${s.studentName?.charAt(0)||'?'}</div><div style="flex:1;"><div style="font-size:13px;font-weight:500;">${s.studentName}</div><div style="font-size:12px;color:var(--col-muted);">${t?.title||'–'}</div></div>${s.grade?`<div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${KT.gradeColor(s.grade)}22;border:2px solid ${KT.gradeColor(s.grade)};font-family:var(--font-display);font-weight:900;font-size:12px;color:${KT.gradeColor(s.grade)};">${s.grade}</div>`:'<span class="badge badge-yellow" style="font-size:11px;">Offen</span>'}</div>`;}).join('');
+}
+
+// ── Profile ──
+function loadProfile(){const d=KT.load();const p=d.teachers?.[0]||{};document.getElementById('p-title').value=p.title||'Herr';document.getElementById('p-name').value=p.name||'';document.getElementById('p-subject').value=p.subject||'';document.getElementById('p-city').value=p.city||'';document.getElementById('sbar-name').textContent=p.name||'Lehrer';document.getElementById('sbar-av').textContent=(p.name||'L').charAt(0);}
+function saveProfile(){
+  const data=KT.load();if(!data.teachers)data.teachers=[];
+  const p={id:data.teachers[0]?.id||KT.uid(),title:document.getElementById('p-title').value,name:document.getElementById('p-name').value,subject:document.getElementById('p-subject').value,city:document.getElementById('p-city').value};
+  const pw=document.getElementById('p-pw').value;
+  if(pw){KT.sha256(pw).then(h=>{p.pwHash=h;data.teachers[0]=p;KT.save(data);KT.toast('Profil gespeichert','success');loadProfile();});}
+  else{data.teachers[0]=p;KT.save(data);KT.toast('Profil gespeichert','success');loadProfile();}
+}
+
+// ── Admin ──
+function openAdminDlg(){document.getElementById('dlg-admin').classList.remove('hidden');}
+async function doAdminLogin(){
+  const n=document.getElementById('adm-n').value;const c=document.getElementById('adm-c').value;const p=document.getElementById('adm-p').value;
+  const ok=await KT.checkAdmin(n,c,p);
+  if(ok){isAdmin=true;document.getElementById('nav-admin').style.display='';closeDlg('dlg-admin');KT.toast('Admin-Zugang freigeschaltet ✅','success');showSection('admin');}
+  else{document.getElementById('adm-err').style.display='block';}
+}
+function renderAdmin(){
+  if(!isAdmin){showSection('profile');return;}
+  const data=KT.load();
+  document.getElementById('admin-stat-grid').innerHTML=[
+    {icon:'👩‍🏫',val:data.teachers.length,label:'Lehrer'},{icon:'📋',val:data.tests.length,label:'Tests'},
+    {icon:'👥',val:data.students?.length||0,label:'Schüler'},{icon:'📬',val:data.submissions.length,label:'Abgaben'},
+  ].map((c,i)=>`<div class="stat-card" style="animation-delay:${i*.07}s"><div class="stat-icon">${c.icon}</div><div class="stat-val">${c.val}</div><div class="stat-label">${c.label}</div></div>`).join('');
+  renderAdmTab('teachers');
+}
+let admTab='teachers';
+function switchAdmTab(t,btn){admTab=t;document.querySelectorAll('#sec-admin .tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAdmTab(t);}
+function renderAdmTab(tab){
+  const data=KT.load();const el=document.getElementById('admin-content');
+  if(tab==='teachers')el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Fach</th><th>Ort</th><th>Aktion</th></tr></thead><tbody>${data.teachers.map(t=>`<tr><td>${t.title||''} ${t.name||'–'}</td><td>${t.subject||'–'}</td><td>${t.city||'–'}</td><td><button class="btn btn-danger btn-sm" onclick="if(confirm('Löschen?')){const d=KT.load();d.teachers=d.teachers.filter(x=>x.id!=='${t.id}');KT.save(d);renderAdmin();}">🗑</button></td></tr>`).join('')}</tbody></table></div>`;
+  else if(tab==='tests')el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Titel</th><th>Fach</th><th>Status</th><th>Code</th><th>Aktion</th></tr></thead><tbody>${data.tests.map(t=>`<tr><td><strong>${t.title}</strong></td><td>${t.subject||'–'}</td><td><span class="badge ${t.status==='live'?'badge-green':t.status==='ended'?'badge-yellow':'badge-gray'}">${t.status}</span></td><td style="font-family:var(--font-mono);">${t.code||'–'}</td><td><button class="btn btn-danger btn-sm" onclick="if(confirm('Löschen?')){const d=KT.load();d.tests=d.tests.filter(x=>x.id!=='${t.id}');d.submissions=d.submissions.filter(x=>x.testId!=='${t.id}');KT.save(d);renderAdmTab('tests');}">🗑</button></td></tr>`).join('')}</tbody></table></div>`;
+  else if(tab==='students')el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Beigetreten</th><th>Test</th></tr></thead><tbody>${(data.students||[]).map(s=>{const t=data.tests.find(x=>x.id===s.testId);return `<tr><td>${s.name}</td><td style="font-size:13px;color:var(--col-muted);">${new Date(s.joinedAt).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</td><td>${t?.title||'–'}</td></tr>`;}).join('')}</tbody></table></div>`;
+  else el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Schüler</th><th>Test</th><th>Score</th><th>Note</th></tr></thead><tbody>${data.submissions.map(s=>{const t=data.tests.find(x=>x.id===s.testId);return `<tr><td>${s.studentName}</td><td>${t?.title||'–'}</td><td>${s.score?.pct||0}%</td><td style="color:${KT.gradeColor(s.grade)};font-weight:700;">${s.grade||'–'}</td></tr>`;}).join('')}</tbody></table></div>`;
+}
+
+function clearAllData(){if(!confirm('Wirklich ALLE Daten löschen? Dies kann nicht rückgängig gemacht werden!'))return;localStorage.removeItem(KT.STORAGE_KEY);location.reload();}
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'&&document.getElementById('sec-create').classList.contains('active')){e.preventDefault();saveDraft();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='p'&&document.getElementById('sec-create').classList.contains('active')){e.preventDefault();togglePreview();}
+});
+
+setInterval(()=>{if(document.getElementById('sec-live').classList.contains('active'))updateLive();},4000);
+</script>
+</body>
+</html>
